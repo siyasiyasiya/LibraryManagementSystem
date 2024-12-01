@@ -136,7 +136,7 @@ public class ClientGUI extends JFrame implements Runnable {
             loginLibraryDropdown.setPreferredSize(new Dimension(100, 20));
 
             loginLibraryDropdown.insertItemAt(null, 0);
-            //libraryDropdown.setSelectedIndex(0);
+            loginLibraryDropdown.setSelectedIndex(0);
 
             usernamePanel.add(loginLibraryDropdown, BorderLayout.CENTER);
         }
@@ -222,7 +222,7 @@ public class ClientGUI extends JFrame implements Runnable {
         createLibraryDropdown.setBorder(BorderFactory.createEmptyBorder(15, 0, 10, 0));
 
         createLibraryDropdown.insertItemAt(null, 0);
-        //libraryDropdown.setSelectedIndex(0);
+        createLibraryDropdown.setSelectedIndex(0);
 
         dropdownPanel.add(dropdownLabel, BorderLayout.NORTH);
         dropdownPanel.add(createLibraryDropdown, BorderLayout.CENTER);
