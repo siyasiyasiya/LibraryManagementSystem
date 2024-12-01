@@ -6,6 +6,8 @@ import network.Client;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -13,12 +15,13 @@ import java.util.ArrayList;
 public class ClientGUI extends JFrame implements Runnable {
 
     private Client client;
-    private JTextField usernameField, passwordField, libraryNameField, bookTitleField, bookAuthorField, bookGenreField, bookSynopsisField;
+    private JTextField loginUsernameField, createUsernameField, libraryNameField, bookTitleField, bookAuthorField, bookGenreField, bookSynopsisField;
+    private JPasswordField loginPasswordField, createPasswordField;
     private JTextArea outputArea;
     private JPanel mainPanel, landingPanel, landingUserPanel, landingLibraryPanel, tabsPanel;
     private CardLayout cardLayout;
     private JTabbedPane landingUserTabs, landingLibraryTabs, mainTabs;
-    private JComboBox<Library> libraryDropdown;
+    private JComboBox<Library> loginLibraryDropdown, createLibraryDropdown;
 
     public ClientGUI(String host, int port) {
         try {
@@ -37,14 +40,14 @@ public class ClientGUI extends JFrame implements Runnable {
 
         landingPanel = createLandingPanel();
 
-        landingUserPanel = createLandingUserPanel();
-        landingLibraryPanel = createLandingLibraryPanel();
+        //landingUserPanel = createLandingUserPanel();
+        //landingLibraryPanel = createLandingLibraryPanel();
 
         tabsPanel = createTabsPanel();
 
         mainPanel.add(landingPanel, "Landing Page");
-        mainPanel.add(landingUserPanel, "Landing User Page");
-        mainPanel.add(landingLibraryPanel, "Landing Library Page");
+        //mainPanel.add(landingUserPanel, "Landing User Page");
+        //mainPanel.add(landingLibraryPanel, "Landing Library Page");
         mainPanel.add(tabsPanel, "Tabs");
 
         add(mainPanel);
@@ -122,16 +125,20 @@ public class ClientGUI extends JFrame implements Runnable {
 
         if (isReader) {
             usernameLabel = new JLabel("Username:");
-            usernameField = new JTextField();
-            usernameField.setFont(new Font("Arial", Font.PLAIN, 14));
-            usernameField.setPreferredSize(new Dimension(100, 20));
-            usernamePanel.add(usernameField, BorderLayout.CENTER);
+            loginUsernameField = new JTextField();
+            loginUsernameField.setFont(new Font("Arial", Font.PLAIN, 14));
+            loginUsernameField.setPreferredSize(new Dimension(100, 20));
+            usernamePanel.add(loginUsernameField, BorderLayout.CENTER);
         } else {
             usernameLabel = new JLabel("Library:");
-            libraryDropdown = new JComboBox<>(retrieveLibraries().toArray(new Library[0]));
-            libraryDropdown.setFont(new Font("Arial", Font.PLAIN, 14));
-            libraryDropdown.setPreferredSize(new Dimension(100, 20));
-            usernamePanel.add(libraryDropdown, BorderLayout.CENTER);
+            loginLibraryDropdown = new JComboBox<>(retrieveLibraries().toArray(new Library[0]));
+            loginLibraryDropdown.setFont(new Font("Arial", Font.PLAIN, 14));
+            loginLibraryDropdown.setPreferredSize(new Dimension(100, 20));
+
+            loginLibraryDropdown.insertItemAt(null, 0);
+            //libraryDropdown.setSelectedIndex(0);
+
+            usernamePanel.add(loginLibraryDropdown, BorderLayout.CENTER);
         }
 
         usernameLabel.setFont(new Font("Arial", Font.PLAIN, 14));
@@ -142,11 +149,17 @@ public class ClientGUI extends JFrame implements Runnable {
 
         JLabel passwordLabel = new JLabel("Password:");
         passwordLabel.setFont(new Font("Arial", Font.PLAIN, 14));
-        passwordField = new JPasswordField();
-        passwordField.setFont(new Font("Arial", Font.PLAIN, 14));
-        passwordField.setPreferredSize(new Dimension(100, 20));
+        loginPasswordField = new JPasswordField();
+        loginPasswordField.setFont(new Font("Arial", Font.PLAIN, 14));
+        loginPasswordField.setPreferredSize(new Dimension(100, 20));
+        loginPasswordField.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                String text = new String(loginPasswordField.getPassword());
+                System.out.println("Text entered: " + text);
+            }
+        });
         passwordPanel.add(passwordLabel, BorderLayout.NORTH);
-        passwordPanel.add(passwordField, BorderLayout.CENTER);
+        passwordPanel.add(loginPasswordField, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JButton loginButton = new JButton("Login");
@@ -179,37 +192,40 @@ public class ClientGUI extends JFrame implements Runnable {
         }
 
         usernameLabel.setFont(new Font("Arial", Font.PLAIN, 15));
-        usernameField = new JTextField();
-        usernameField.setFont(new Font("Arial", Font.PLAIN, 15));
-        usernameField.setPreferredSize(new Dimension(100, 20));
+        createUsernameField = new JTextField();
+        createUsernameField.setFont(new Font("Arial", Font.PLAIN, 15));
+        createUsernameField.setPreferredSize(new Dimension(100, 20));
 
         usernamePanel.add(usernameLabel, BorderLayout.NORTH);
-        usernamePanel.add(usernameField, BorderLayout.CENTER);
+        usernamePanel.add(createUsernameField, BorderLayout.CENTER);
 
         JPanel passwordPanel = new JPanel(new BorderLayout());
         passwordPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 10, 5));
 
         JLabel passwordLabel = new JLabel("Password:");
         passwordLabel.setFont(new Font("Arial", Font.PLAIN, 15));
-        passwordField = new JPasswordField();
-        passwordField.setFont(new Font("Arial", Font.PLAIN, 15));
-        passwordField.setPreferredSize(new Dimension(100, 20));
+        createPasswordField = new JPasswordField();
+        createPasswordField.setFont(new Font("Arial", Font.PLAIN, 15));
+        createPasswordField.setPreferredSize(new Dimension(100, 20));
 
         passwordPanel.add(passwordLabel, BorderLayout.NORTH);
-        passwordPanel.add(passwordField, BorderLayout.CENTER);
+        passwordPanel.add(createPasswordField, BorderLayout.CENTER);
 
         JPanel dropdownPanel = new JPanel(new BorderLayout());
         dropdownPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 10, 5));
 
         JLabel dropdownLabel = new JLabel("Library:");
         dropdownLabel.setFont(new Font("Arial", Font.PLAIN, 15));
-        libraryDropdown = new JComboBox<>(retrieveLibraries().toArray(new Library[0]));
-        libraryDropdown.setFont(new Font("Arial", Font.PLAIN, 15));
-        libraryDropdown.setPreferredSize(new Dimension(100, 20));
-        libraryDropdown.setBorder(BorderFactory.createEmptyBorder(15, 0, 10, 0));
+        createLibraryDropdown = new JComboBox<>(retrieveLibraries().toArray(new Library[0]));
+        createLibraryDropdown.setFont(new Font("Arial", Font.PLAIN, 15));
+        createLibraryDropdown.setPreferredSize(new Dimension(100, 20));
+        createLibraryDropdown.setBorder(BorderFactory.createEmptyBorder(15, 0, 10, 0));
+
+        createLibraryDropdown.insertItemAt(null, 0);
+        //libraryDropdown.setSelectedIndex(0);
 
         dropdownPanel.add(dropdownLabel, BorderLayout.NORTH);
-        dropdownPanel.add(libraryDropdown, BorderLayout.CENTER);
+        dropdownPanel.add(createLibraryDropdown, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JButton signUpBotton = new JButton("Sign Up");
@@ -314,11 +330,15 @@ public class ClientGUI extends JFrame implements Runnable {
     }
 
     private void enableLoginUserTabs() {
+        landingUserPanel = createLandingUserPanel();
+        mainPanel.add(landingUserPanel, "Landing User Page");
         landingUserTabs.setEnabled(true);
         cardLayout.show(mainPanel, "Landing User Page");
     }
 
     private void enableLoginLibraryTabs() {
+        landingLibraryPanel = createLandingLibraryPanel();
+        mainPanel.add(landingLibraryPanel, "Landing Library Page");
         landingLibraryTabs.setEnabled(true);
         cardLayout.show(mainPanel, "Landing Library Page");
     }
@@ -331,22 +351,25 @@ public class ClientGUI extends JFrame implements Runnable {
     private void handleLogin(Boolean isReader) {
         String username;
         if (isReader) {
-            username = usernameField.getText();
+            username = loginUsernameField.getText().trim();
             if (username.isEmpty()) {
+                System.out.println("username: " + loginUsernameField.getText());
                 showError("Please enter a username");
                 return;
             }
         } else {
-            username = libraryDropdown.getSelectedItem().toString();
-            if (username == null) {
+            Object obj = loginLibraryDropdown.getSelectedItem();
+            if (obj == null) {
                 showError("Please select a library");
                 return;
             }
+            username = obj.toString();
         }
 
-        String password = passwordField.getText();
+        String password = new String(loginPasswordField.getPassword()).trim();
 
         if (password.isEmpty()) {
+            System.out.println("password: " + password);
             showError("Please enter a password");
             return;
         }
@@ -363,13 +386,13 @@ public class ClientGUI extends JFrame implements Runnable {
     }
 
     private void handleCreateAccount(Boolean isReader) {
-        String username = usernameField.getText();
+        String username = createUsernameField.getText();
         if (username.isEmpty()) {
             showError("Please enter a username");
             return;
         }
 
-        String password = passwordField.getText();
+        String password = new String(createPasswordField.getPassword());
         if (password.isEmpty()) {
             showError("Please enter a password");
             return;
@@ -377,7 +400,7 @@ public class ClientGUI extends JFrame implements Runnable {
 
         Library library = null;
         if (isReader) {
-            String libraryName = libraryDropdown.getSelectedItem().toString();
+            String libraryName = createLibraryDropdown.getSelectedItem().toString();
             if (libraryName == null) {
                 showError("Please select a library");
                 return;
