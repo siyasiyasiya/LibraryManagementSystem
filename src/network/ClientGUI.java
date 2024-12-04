@@ -1,4 +1,4 @@
-package gui;
+package network;
 
 import model.Book;
 import model.Library;
@@ -40,14 +40,9 @@ public class ClientGUI extends JFrame implements Runnable {
 
         landingPanel = createLandingPanel();
 
-        //landingUserPanel = createLandingUserPanel();
-        //landingLibraryPanel = createLandingLibraryPanel();
-
         tabsPanel = createTabsPanel();
 
         mainPanel.add(landingPanel, "Landing Page");
-        //mainPanel.add(landingUserPanel, "Landing User Page");
-        //mainPanel.add(landingLibraryPanel, "Landing Library Page");
         mainPanel.add(tabsPanel, "Tabs");
 
         add(mainPanel);
@@ -385,7 +380,7 @@ public class ClientGUI extends JFrame implements Runnable {
         }
     }
 
-    private void handleCreateAccount(Boolean isReader) {
+    private void handleCreateAccount(Boolean isReader){
         String username = createUsernameField.getText();
         if (username.isEmpty()) {
             showError("Please enter a username");
@@ -417,11 +412,46 @@ public class ClientGUI extends JFrame implements Runnable {
         //must rerun to see new changes
         if (!isReader && client.createLibrary(username, password)) {
             JOptionPane.showMessageDialog(this, "Library Account Created Successfully!", "Account Creation", JOptionPane.INFORMATION_MESSAGE);
+
+            loginLibraryDropdown.removeAllItems();
+            loginLibraryDropdown.addItem(null);
+            System.out.println("Adding libraries to dropdown...");
+            ArrayList<Library> libraries = retrieveLibraries();
+            System.out.println(libraries.size());
+            for (Library lib : libraries) {
+                System.out.println("Adding library: " + lib);
+                loginLibraryDropdown.addItem(lib);
+            }
+            loginLibraryDropdown.setSelectedIndex(0);
+
         } else if (client.createReader(username, password, library)) {
             JOptionPane.showMessageDialog(this, "Reader Account Created Successfully!", "Account Creation", JOptionPane.INFORMATION_MESSAGE);
         } else {
             showError("Account Creation Failed");
         }
+    }
+
+    private void updateLibraryDropdowns() {
+        ArrayList<Library> libraries = retrieveLibraries();
+
+        loginLibraryDropdown.removeAllItems();
+        loginLibraryDropdown.addItem(null);
+        for (Library lib : libraries) {
+            loginLibraryDropdown.addItem(lib);
+        }
+        loginLibraryDropdown.setSelectedIndex(0);
+
+        createLibraryDropdown.removeAllItems();
+        createLibraryDropdown.addItem(null);
+        for (Library lib : libraries) {
+            createLibraryDropdown.addItem(lib);
+        }
+        createLibraryDropdown.setSelectedIndex(0);
+
+        loginLibraryDropdown.revalidate();
+        loginLibraryDropdown.repaint();
+        createLibraryDropdown.revalidate();
+        createLibraryDropdown.repaint();
     }
 
     private ArrayList<Library> retrieveLibraries() {

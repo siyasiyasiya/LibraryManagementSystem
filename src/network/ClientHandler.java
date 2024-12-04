@@ -159,7 +159,7 @@ public class ClientHandler implements Runnable {
     public void retrieveLibraries() {
         try {
             ArrayList<Library> libraries = database.getLibraries();
-            System.out.println( libraries.size() );
+            System.out.println(libraries);
             out.writeObject(libraries);
             out.flush();
         } catch (Exception e) {
