@@ -10,6 +10,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.Socket;
+import java.time.Clock;
 import java.util.ArrayList;
 
 public class ClientGUI extends JFrame implements Runnable {
@@ -413,18 +414,9 @@ public class ClientGUI extends JFrame implements Runnable {
         if (!isReader && client.createLibrary(username, password)) {
             JOptionPane.showMessageDialog(this, "Library Account Created Successfully!", "Account Creation", JOptionPane.INFORMATION_MESSAGE);
 
-            loginLibraryDropdown.removeAllItems();
-            loginLibraryDropdown.addItem(null);
-            System.out.println("Adding libraries to dropdown...");
-            ArrayList<Library> libraries = retrieveLibraries();
-            System.out.println(libraries.size());
-            for (Library lib : libraries) {
-                System.out.println("Adding library: " + lib);
-                loginLibraryDropdown.addItem(lib);
-            }
-            loginLibraryDropdown.setSelectedIndex(0);
+            updateLibraryDropdowns();
 
-        } else if (client.createReader(username, password, library)) {
+        } else if (isReader && client.createReader(username, password, library)) {
             JOptionPane.showMessageDialog(this, "Reader Account Created Successfully!", "Account Creation", JOptionPane.INFORMATION_MESSAGE);
         } else {
             showError("Account Creation Failed");
@@ -432,7 +424,11 @@ public class ClientGUI extends JFrame implements Runnable {
     }
 
     private void updateLibraryDropdowns() {
+        System.out.println("looking to update libraries");
         ArrayList<Library> libraries = retrieveLibraries();
+        Clock systemClock = Clock.systemDefaultZone();
+        System.out.println(systemClock.instant());
+        System.out.println(libraries);
 
         loginLibraryDropdown.removeAllItems();
         loginLibraryDropdown.addItem(null);

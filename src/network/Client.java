@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.time.Clock;
 import java.util.ArrayList;
 
 public class Client {
@@ -72,6 +73,7 @@ public class Client {
         try {
             out.writeObject("SAVE");
             out.writeObject(null);
+            out.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -99,7 +101,11 @@ public class Client {
             out.writeObject(password);
             out.flush();
             String response = (String) in.readObject();
-            return response.equals("SUCCESS");
+            if (response.equals("SUCCESS")) {
+                this.endStream();
+                return true;
+            }
+            return false;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -138,7 +144,11 @@ public class Client {
     public ArrayList<Library> retrieveLibraries() {
         try {
             out.writeObject("RETRIEVE_LIBRARIES");
+            out.flush();
             ArrayList<Library> libraries = (ArrayList<Library>) in.readObject();
+            Clock systemClock = Clock.systemDefaultZone();
+            System.out.println(systemClock.instant());
+            System.out.println(libraries);
             return libraries;
         } catch (Exception e) {
             e.printStackTrace();
@@ -149,6 +159,7 @@ public class Client {
     public ArrayList<Reader> retrieveReadersByLibrary() {
         try {
             out.writeObject("RETRIEVE_READERS_BY_LIBRARY");
+            out.flush();
             ArrayList<Reader> readers = (ArrayList<Reader>) in.readObject();
             return readers;
         } catch (Exception e) {
@@ -160,6 +171,7 @@ public class Client {
     public ArrayList<Book> retrieveBooksByLibrary() {
         try {
             out.writeObject("RETRIEVE_BOOKS_BY_LIBRARY");
+            out.flush();
             ArrayList<Book> books = (ArrayList<Book>) in.readObject();
             return books;
         } catch (Exception e) {
@@ -183,6 +195,7 @@ public class Client {
     public ArrayList<Book> retrieveBooksByReader() {
         try {
             out.writeObject("RETRIEVE_BOOKS_BY_READER");
+            out.flush();
             ArrayList<Book> books = (ArrayList<Book>) in.readObject();
             return books;
         } catch (Exception e) {
@@ -195,6 +208,7 @@ public class Client {
         try {
             out.writeObject("RETRIEVE_READER_OF_BOOK");
             out.writeObject(book);
+            out.flush();
             Reader reader = (Reader) in.readObject();
             return reader;
         } catch (Exception e) {

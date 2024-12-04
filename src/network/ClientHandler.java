@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.time.Clock;
 import java.util.ArrayList;
 
 public class ClientHandler implements Runnable {
@@ -159,6 +160,8 @@ public class ClientHandler implements Runnable {
     public void retrieveLibraries() {
         try {
             ArrayList<Library> libraries = database.getLibraries();
+            Clock systemClock = Clock.systemDefaultZone();
+            System.out.println(systemClock.instant());
             System.out.println(libraries);
             out.writeObject(libraries);
             out.flush();
