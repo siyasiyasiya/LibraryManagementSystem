@@ -89,6 +89,7 @@ public class ClientHandler implements Runnable {
             reader = r;
             library = lib;
             database.addReader(r);
+            database.writeReader();
             out.writeObject("SUCCESS");
             out.flush();
         } catch (Exception e) {
@@ -108,6 +109,7 @@ public class ClientHandler implements Runnable {
             Library l = new Library(name, password);
             library = l;
             database.addLibrary(l);
+            database.writeLibraries();
             out.writeObject("SUCCESS");
             out.flush();
         } catch (Exception e) {
@@ -122,14 +124,16 @@ public class ClientHandler implements Runnable {
             String genre = (String) in.readObject();
             String synopsis = (String) in.readObject();
 
-            Book b = database.retrieveBook(title);
+            Book b = database.retrieveBook(title, author, library);
 
-            if (b != null && b.getAuthor().equals(author) && b.getLibrary().equals(library.getLibraryId())) {
+            if (b != null) {
                 out.writeObject("FAILURE");
             } else {
                 Book newB = new Book(title, author, genre, synopsis, library.getLibraryId());
                 library.addBook(newB.getBookID());
                 database.addBook(newB);
+                database.writeBooks();
+                database.writeLibraries();
                 out.writeObject("SUCCESS");
             }
 
@@ -146,6 +150,8 @@ public class ClientHandler implements Runnable {
             if (library.getBooks().contains(book.getBookID())) {
                 library.removeBook(book.getBookID());
                 database.removeBook(book);
+                database.writeBooks();
+                database.writeLibraries();
                 out.writeObject("SUCCESS");
             } else {
                 out.writeObject("FAILURE");
@@ -226,6 +232,8 @@ public class ClientHandler implements Runnable {
             if (book.isAvailable() && library.getBooks().contains(book.getBookID())) {
                 reader.addBook(book.getBookID());
                 book.setReader(reader.getReaderId());
+                database.writeBooks();
+                database.writeReader();
                 out.writeObject("SUCCESS");
             } else {
                 out.writeObject("FAILURE");
@@ -244,6 +252,8 @@ public class ClientHandler implements Runnable {
             if (book.getReader().equals(reader.getReaderId())) {
                 reader.removeBook(book.getBookID());
                 book.setReader(null);
+                database.writeBooks();
+                database.writeReader();
                 out.writeObject("SUCCESS");
             } else {
                 out.writeObject("FAILURE");
