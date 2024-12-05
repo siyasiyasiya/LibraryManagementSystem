@@ -2,6 +2,7 @@ package network;
 
 import model.Book;
 import model.Library;
+import model.Reader;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,7 +20,7 @@ public class ClientGUI extends JFrame implements Runnable {
     private JTextArea outputArea;
     private JPanel mainPanel, landingPanel, landingUserPanel, landingLibraryPanel, readerTabsPanel, libraryTabsPanel;
     private CardLayout cardLayout;
-    private JTabbedPane landingUserTabs, landingLibraryTabs, readerMainTabs;
+    private JTabbedPane landingUserTabs, landingLibraryTabs, readerMainTabs, libraryMainTabs;
     private JComboBox<Library> loginLibraryDropdown, createLibraryDropdown;
     private DefaultListModel<String> libraryListModel, userListModel;
     private JList<String> libraryBookList, userBookList;
@@ -245,7 +246,7 @@ public class ClientGUI extends JFrame implements Runnable {
     private JPanel createReaderTabsPanel() {
         readerMainTabs = new JTabbedPane();
 
-        readerMainTabs.add("Library Books", createLibraryBooksPanel());
+        readerMainTabs.add("Library Books", createLibraryBooksPanel(true));
         readerMainTabs.add("My Books", createUserBooksPanel());
 
         // Initially disable the tabs
@@ -258,9 +259,31 @@ public class ClientGUI extends JFrame implements Runnable {
         return panel;
     }
 
-    private JPanel createLibraryBooksPanel() {
+    private JPanel createLibraryTabsPanel() {
+        libraryMainTabs = new JTabbedPane();
+
+        libraryMainTabs.add("Library Books", createLibraryBooksPanel(false));
+        //libraryMainTabs.add("Library Readers", createUserBooksPanel());
+        libraryMainTabs.add("Add Book", createAddBookPanel());
+
+        libraryMainTabs.setEnabled(false);
+
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(libraryMainTabs, BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    private JPanel createLibraryBooksPanel(boolean isReader) {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        int which;
+        if (isReader) {
+            which = 0;
+        } else {
+            which = 2;
+        }
 
         ArrayList<Book> libraryBooks = client.retrieveBooksByLibrary();
         libraryListModel = new DefaultListModel<>();
@@ -289,17 +312,17 @@ public class ClientGUI extends JFrame implements Runnable {
         libraryBookList = new JList<>(libraryListModel);
         libraryBookList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        libraryBookList.setFont(new Font("Arial", Font.PLAIN, 14));  // Make font consistent
-        libraryBookList.setBackground(Color.WHITE);  // Set background to white
-        libraryBookList.setForeground(Color.DARK_GRAY);  // Darker text for better readability
-        libraryBookList.setSelectionBackground(new Color(30, 144, 255));  // Bright blue selection color
+        libraryBookList.setFont(new Font("Arial", Font.PLAIN, 14));
+        libraryBookList.setBackground(Color.WHITE);
+        libraryBookList.setForeground(Color.DARK_GRAY);
+        libraryBookList.setSelectionBackground(new Color(30, 144, 255));
         libraryBookList.setSelectionForeground(Color.WHITE);
 
         libraryBookList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 int index = libraryBookList.getSelectedIndex();
                 if (index != -1 && libraryBooks != null && libraryBooks.size() > index) {
-                    handleBookSelection(index, libraryBooks, true);
+                    handleBookSelection(index, libraryBooks, which);
                 }
             }
         });
@@ -344,17 +367,17 @@ public class ClientGUI extends JFrame implements Runnable {
         userBookList = new JList<>(userListModel);
         userBookList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        userBookList.setFont(new Font("Arial", Font.PLAIN, 14));  // Make font consistent
-        userBookList.setBackground(Color.WHITE);  // White background for list
-        userBookList.setForeground(Color.DARK_GRAY);  // Dark gray text
-        userBookList.setSelectionBackground(new Color(30, 144, 255));  // Blue selection color
+        userBookList.setFont(new Font("Arial", Font.PLAIN, 14));
+        userBookList.setBackground(Color.WHITE);
+        userBookList.setForeground(Color.DARK_GRAY);
+        userBookList.setSelectionBackground(new Color(30, 144, 255));
         userBookList.setSelectionForeground(Color.WHITE);
 
         userBookList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 int index = userBookList.getSelectedIndex();
                 if (index != -1 && userBooks != null && userBooks.size() > index) {
-                    handleBookSelection(index, userBooks, false);
+                    handleBookSelection(index, userBooks, 1);
                 }
             }
         });
@@ -386,22 +409,29 @@ public class ClientGUI extends JFrame implements Runnable {
         }
     }
 
-    private void handleBookSelection(int index, ArrayList<Book> books, boolean checkOut) {
+    private void handleBookSelection(int index, ArrayList<Book> books, int which) {
         Book book = books.get(index);
 
         String bookDetails = "<html><strong>" + book.getTitle() + "</strong><br>";
-        String action = "Return";
+        String action = "Remove";
 
-        if (checkOut) {
+        if (which == 0) {
             bookDetails = "<html><strong>" + book.getTitle() + "</strong><br>"
                     + "Author: " + book.getAuthor() + "<br>"
                     + "Genre: " + book.getGenre() + "<br>"
                     + "Synopsis: " + book.getSynopsis() + "<br></html>";
             action = "Check Out";
+        } else if (which == 1) {
+            action = "Return";
         }
 
-        if (!book.isAvailable() && checkOut) {
-            JOptionPane.showMessageDialog(this, "Book is currently checked out by another user.", "Book Unavailable", JOptionPane.INFORMATION_MESSAGE);
+        if (!book.isAvailable()) {
+            if (which == 0) {
+                JOptionPane.showMessageDialog(this, "Book is currently checked out by another user.", "Book Unavailable", JOptionPane.INFORMATION_MESSAGE);
+            } else if (which == 2) {
+                Reader reader = client.retrieveReaderOfBook(book);
+                JOptionPane.showMessageDialog(this, "Book is currently checked out by " + reader.getUsername() + ".", "Book Unavailable", JOptionPane.INFORMATION_MESSAGE);
+            }
         } else {
             int response = JOptionPane.showConfirmDialog(
                     this,
@@ -412,10 +442,12 @@ public class ClientGUI extends JFrame implements Runnable {
             );
 
             if (response == JOptionPane.YES_OPTION) {
-                if (checkOut) {
+                if (which == 0) {
                     checkoutBook(book);
-                } else {
+                } else if (which == 1) {
                     returnBook(book);
+                } else {
+                    removeBookFromLibrary(book);
                 }
             } else {
                 JOptionPane.showMessageDialog(this, "You chose not to " + action + " the book.", "Action Cancelled", JOptionPane.INFORMATION_MESSAGE);
@@ -423,38 +455,51 @@ public class ClientGUI extends JFrame implements Runnable {
         }
     }
 
-    private JPanel createLibraryPanel() {
-        JPanel panel = new JPanel(new GridLayout(5, 2, 10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    private JPanel createAddBookPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+
+        JPanel fieldPanel = new JPanel(new GridLayout(4, 2, 10, 10));
+        fieldPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         JLabel titleLabel = new JLabel("Book Title:");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 14));
         bookTitleField = new JTextField();
+        bookTitleField.setFont(new Font("Arial", Font.PLAIN, 14));
 
         JLabel authorLabel = new JLabel("Author:");
+        authorLabel.setFont(new Font("Arial", Font.BOLD, 14));
         bookAuthorField = new JTextField();
+        bookAuthorField.setFont(new Font("Arial", Font.PLAIN, 14));
 
         JLabel genreLabel = new JLabel("Genre:");
+        genreLabel.setFont(new Font("Arial", Font.BOLD, 14));
         bookGenreField = new JTextField();
+        bookGenreField.setFont(new Font("Arial", Font.PLAIN, 14));
 
         JLabel synopsisLabel = new JLabel("Synopsis:");
+        synopsisLabel.setFont(new Font("Arial", Font.BOLD, 14));
         bookSynopsisField = new JTextField();
+        bookSynopsisField.setFont(new Font("Arial", Font.PLAIN, 14));
 
+        JPanel buttonPanel = new JPanel(new BorderLayout());
+//        buttonPanel.setBorder(BorderFactory.createEmptyBorder(40, 50, 40, 50));
         JButton addBookButton = new JButton("Add Book to Library");
+        addBookButton.setFont(new Font("Arial", Font.BOLD, 14));
+        addBookButton.setFocusPainted(false);
         addBookButton.addActionListener(e -> addBookToLibrary());
+        buttonPanel.add(addBookButton);
 
-        JButton removeBookButton = new JButton("Remove Book from Library");
-        removeBookButton.addActionListener(e -> removeBookFromLibrary());
+        fieldPanel.add(titleLabel);
+        fieldPanel.add(bookTitleField);
+        fieldPanel.add(authorLabel);
+        fieldPanel.add(bookAuthorField);
+        fieldPanel.add(genreLabel);
+        fieldPanel.add(bookGenreField);
+        fieldPanel.add(synopsisLabel);
+        fieldPanel.add(bookSynopsisField);
 
-        panel.add(titleLabel);
-        panel.add(bookTitleField);
-        panel.add(authorLabel);
-        panel.add(bookAuthorField);
-        panel.add(genreLabel);
-        panel.add(bookGenreField);
-        panel.add(synopsisLabel);
-        panel.add(bookSynopsisField);
-        panel.add(addBookButton);
-        panel.add(removeBookButton);
+        panel.add(fieldPanel, BorderLayout.CENTER);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
 
         return panel;
     }
@@ -493,12 +538,12 @@ public class ClientGUI extends JFrame implements Runnable {
         cardLayout.show(mainPanel, "Reader Tabs");
     }
 
-//    private void enableLibraryMainTabs() {
-//        libraryTabsPanel = createReaderTabsPanel();
-//        mainPanel.add(readerTabsPanel, "Reader Tabs");
-//        readerMainTabs.setEnabled(true);
-//        cardLayout.show(mainPanel, "Reader Tabs");
-//    }
+    private void enableLibraryMainTabs() {
+        libraryTabsPanel = createLibraryTabsPanel();
+        mainPanel.add(libraryTabsPanel, "Library Tabs");
+        libraryMainTabs.setEnabled(true);
+        cardLayout.show(mainPanel, "Library Tabs");
+    }
 
     private void handleLogin(Boolean isReader) {
         String username;
@@ -531,7 +576,7 @@ public class ClientGUI extends JFrame implements Runnable {
             enableReaderMainTabs();
         } else if (client.loginLibrary(username, password)) {
             JOptionPane.showMessageDialog(this, "Library Login Successful", "Login", JOptionPane.INFORMATION_MESSAGE);
-            //enableMainTabs();
+            enableLibraryMainTabs();
         } else {
             showError("Either Library Name/Username or Password is Incorrect");
         }
@@ -620,10 +665,7 @@ public class ClientGUI extends JFrame implements Runnable {
         }
     }
 
-    private void removeBookFromLibrary() {
-        String title = bookTitleField.getText();
-        Book book = new Book(title, null, null, null, null);
-
+    private void removeBookFromLibrary(Book book) {
         if (client.removeBookFromLibrary(book)) {
             JOptionPane.showMessageDialog(this, "Book removed from library successfully!", "Book Remove", JOptionPane.INFORMATION_MESSAGE);
         } else {
