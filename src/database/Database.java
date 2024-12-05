@@ -13,9 +13,9 @@ public class Database {
     private final Object BOOKLOCK = new Object();
     private final Object READERLOCK = new Object();
 
-    private final String LIBRARYFILE = "data/allLibraries.txt";
-    private final String BOOKFILE = "data/allBooks.txt";
-    private final String READERFILE = "data/allReaders.txt";
+    private final String LIBRARYFILE = "src/data/allLibraries.txt";
+    private final String BOOKFILE = "src/data/allBooks.txt";
+    private final String READERFILE = "src/data/allReaders.txt";
 
     private ArrayList<Library> libraries;
     private ArrayList<Book> books;

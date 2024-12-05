@@ -101,11 +101,7 @@ public class Client {
             out.writeObject(password);
             out.flush();
             String response = (String) in.readObject();
-            if (response.equals("SUCCESS")) {
-                this.endStream();
-                return true;
-            }
-            return false;
+            return response.equals("SUCCESS");
         } catch (Exception e) {
             e.printStackTrace();
             return false;

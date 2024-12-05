@@ -425,24 +425,23 @@ public class ClientGUI extends JFrame implements Runnable {
 
     private void updateLibraryDropdowns() {
         System.out.println("looking to update libraries");
-        ArrayList<Library> libraries = retrieveLibraries();
-        Clock systemClock = Clock.systemDefaultZone();
-        System.out.println(systemClock.instant());
-        System.out.println(libraries);
+        ArrayList<Library> libraries = this.retrieveLibraries();
+        //Clock systemClock = Clock.systemDefaultZone();
+        //System.out.println(systemClock.instant());
+        //System.out.println(libraries);
 
         loginLibraryDropdown.removeAllItems();
         loginLibraryDropdown.addItem(null);
-        for (Library lib : libraries) {
-            loginLibraryDropdown.addItem(lib);
-        }
         loginLibraryDropdown.setSelectedIndex(0);
 
         createLibraryDropdown.removeAllItems();
         createLibraryDropdown.addItem(null);
+        createLibraryDropdown.setSelectedIndex(0);
+
         for (Library lib : libraries) {
+            loginLibraryDropdown.addItem(lib);
             createLibraryDropdown.addItem(lib);
         }
-        createLibraryDropdown.setSelectedIndex(0);
 
         loginLibraryDropdown.revalidate();
         loginLibraryDropdown.repaint();
