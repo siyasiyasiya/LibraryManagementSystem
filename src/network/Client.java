@@ -69,10 +69,10 @@ public class Client {
         }
     }
 
-    public void endStream(int which) {
+    public void endStream() {
         try {
             out.writeObject("SAVE");
-            out.writeObject(which);
+            out.writeObject(null);
             out.flush();
         } catch (IOException e) {
             e.printStackTrace();
