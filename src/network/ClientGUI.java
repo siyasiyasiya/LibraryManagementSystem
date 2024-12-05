@@ -274,8 +274,9 @@ public class ClientGUI extends JFrame implements Runnable {
         searchLibraryBooksField = new JTextField();
         searchLibraryBooksField.setFont(new Font("Arial", Font.PLAIN, 14));
         searchLibraryBooksField.addCaretListener(e -> {
-            assert libraryBooks != null && !libraryBooks.isEmpty();
-            filterList(searchLibraryBooksField.getText(), libraryListModel, libraryBooks);
+            if (libraryBooks != null && !libraryBooks.isEmpty() && !searchLibraryBooksField.getText().isEmpty()) {
+                filterList(searchLibraryBooksField.getText(), libraryListModel, libraryBooks);
+            }
         });
 
         libraryBookList = new JList<>(libraryListModel);
@@ -284,8 +285,7 @@ public class ClientGUI extends JFrame implements Runnable {
         libraryBookList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 int index = libraryBookList.getSelectedIndex();
-                if (index != -1) {
-                    assert libraryBooks != null && libraryBooks.size() > index;
+                if (index != -1 && libraryBooks != null && libraryBooks.size() > index) {
                     handleBookSelection(index, libraryBooks, true);
                 }
             }
@@ -316,8 +316,9 @@ public class ClientGUI extends JFrame implements Runnable {
         searchUserBooksField = new JTextField();
         searchUserBooksField.setFont(new Font("Arial", Font.PLAIN, 14));
         searchUserBooksField.addCaretListener(e -> {
-            assert userBooks != null && !userBooks.isEmpty();
-            filterList(searchUserBooksField.getText(), userListModel, userBooks);
+            if (userBooks != null && !userBooks.isEmpty() && !searchUserBooksField.getText().isEmpty()) {
+                filterList(searchUserBooksField.getText(), userListModel, userBooks);
+            }
         });
 
         userBookList = new JList<>(userListModel);
@@ -326,8 +327,7 @@ public class ClientGUI extends JFrame implements Runnable {
         userBookList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 int index = userBookList.getSelectedIndex();
-                if (index != -1) {
-                    assert userBooks != null && userBooks.size() > index;
+                if (index != -1 && userBooks != null && userBooks.size() > index) {
                     handleBookSelection(index, userBooks, false);
                 }
             }
