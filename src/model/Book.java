@@ -57,4 +57,9 @@ public class Book implements Serializable {
         Book l = (Book) o;
         return this.bookID.equals(l.bookID);
     }
+
+    @Override
+    public String toString() {
+        return this.title + " by " + this.author;
+    }
 }

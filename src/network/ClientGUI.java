@@ -2,7 +2,6 @@ package network;
 
 import model.Book;
 import model.Library;
-import network.Client;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,19 +9,20 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.Socket;
-import java.time.Clock;
 import java.util.ArrayList;
 
 public class ClientGUI extends JFrame implements Runnable {
 
     private Client client;
-    private JTextField loginUsernameField, createUsernameField, libraryNameField, bookTitleField, bookAuthorField, bookGenreField, bookSynopsisField;
+    private JTextField loginUsernameField, createUsernameField, libraryNameField, bookTitleField, bookAuthorField, bookGenreField, bookSynopsisField, searchLibraryBooksField, searchMyBooksField;
     private JPasswordField loginPasswordField, createPasswordField;
     private JTextArea outputArea;
-    private JPanel mainPanel, landingPanel, landingUserPanel, landingLibraryPanel, tabsPanel;
+    private JPanel mainPanel, landingPanel, landingUserPanel, landingLibraryPanel, readerTabsPanel, libraryTabsPanel;
     private CardLayout cardLayout;
-    private JTabbedPane landingUserTabs, landingLibraryTabs, mainTabs;
+    private JTabbedPane landingUserTabs, landingLibraryTabs, readerMainTabs;
     private JComboBox<Library> loginLibraryDropdown, createLibraryDropdown;
+    private DefaultListModel<String> libraryListModel;
+    private JList<String> libraryBookList;
 
     public ClientGUI(String host, int port) {
         try {
@@ -41,10 +41,12 @@ public class ClientGUI extends JFrame implements Runnable {
 
         landingPanel = createLandingPanel();
 
-        tabsPanel = createTabsPanel();
+        readerTabsPanel = createReaderTabsPanel();
+        //libraryTabsPanel = createLibraryTabsPanel();
 
         mainPanel.add(landingPanel, "Landing Page");
-        mainPanel.add(tabsPanel, "Tabs");
+        mainPanel.add(readerTabsPanel, "Reader Tabs");
+        mainPanel.add(libraryTabsPanel, "Library Tabs");
 
         add(mainPanel);
     }
@@ -240,24 +242,74 @@ public class ClientGUI extends JFrame implements Runnable {
         return panel;
     }
 
-    private JPanel createTabsPanel() {
-        mainTabs = new JTabbedPane();
+    private JPanel createReaderTabsPanel() {
+        readerMainTabs = new JTabbedPane();
 
-        mainTabs.add("Reader Operations", createReaderPanel());
-        mainTabs.add("Library Operations", createLibraryPanel());
+        readerMainTabs.add("Library Books", createReaderPanel());
+        readerMainTabs.add("My Books", createLibraryPanel());
 
         // Initially disable the tabs
-        mainTabs.setEnabled(false);
+        readerMainTabs.setEnabled(false);
 
         JPanel panel = new JPanel(new BorderLayout());
-        panel.add(mainTabs, BorderLayout.CENTER);
-        panel.add(createOutputPanel(), BorderLayout.SOUTH);
+        panel.add(readerMainTabs, BorderLayout.CENTER);
+        //panel.add(createOutputPanel(), BorderLayout.SOUTH);
 
         return panel;
     }
 
+    private JPanel createLibraryBooksPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        ArrayList<Book> libraryBooks = client.retrieveBooksByLibrary();
+        libraryListModel = new DefaultListModel<>();
+
+        if (libraryBooks != null) {
+            libraryBooks.forEach(book -> libraryListModel.addElement(book.toString()));
+        } else {
+            libraryListModel.addElement("Failed to retrieve books from library");
+        }
+
+        searchLibraryBooksField = new JTextField();
+        searchLibraryBooksField.setFont(new Font("Arial", Font.PLAIN, 14));
+        searchLibraryBooksField.addCaretListener(e -> {
+            assert libraryBooks != null;
+            filterList(searchLibraryBooksField.getText(), libraryListModel, libraryBooks);
+        });
+
+        libraryBookList = new JList<>(libraryListModel);
+        libraryBookList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        JScrollPane scrollPane = new JScrollPane(libraryBookList);
+        scrollPane.setPreferredSize(new Dimension(300, 200));
+
+        panel.add(searchLibraryBooksField, BorderLayout.NORTH);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    private void filterList(String query, DefaultListModel<String> listModel, ArrayList<Book> books) {
+        listModel.clear();
+
+        if (query.isEmpty()) {
+            books.forEach(book -> listModel.addElement(book.toString()));
+        } else {
+            for (Book book : books) {
+                if (book.toString().toLowerCase().contains(query.toLowerCase())) {
+                    listModel.addElement(book.toString());
+                }
+            }
+        }
+
+        if (listModel.isEmpty()) {
+            listModel.addElement("No books found matching the search criteria.");
+        }
+    }
+
     private JPanel createReaderPanel() {
-        JPanel panel = new JPanel(new GridLayout(3, 1, 10, 10));
+        JPanel panel = new JPanel(new GridLayout(2, 1, 10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         JButton viewBooksButton = new JButton("View Books in Library");
@@ -340,7 +392,7 @@ public class ClientGUI extends JFrame implements Runnable {
     }
 
     private void enableMainTabs() {
-        mainTabs.setEnabled(true);
+        readerMainTabs.setEnabled(true);
         cardLayout.show(mainPanel, "Tabs");
     }
 
@@ -410,7 +462,6 @@ public class ClientGUI extends JFrame implements Runnable {
             }
         }
 
-        //must rerun to see new changes
         if (!isReader && client.createLibrary(username, password)) {
             JOptionPane.showMessageDialog(this, "Library Account Created Successfully!", "Account Creation", JOptionPane.INFORMATION_MESSAGE);
 
