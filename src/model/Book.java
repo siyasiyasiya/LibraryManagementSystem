@@ -47,7 +47,7 @@ public class Book implements Serializable {
 
     public void setLibrary(UUID library) { this.library = library; }
 
-    public boolean isAvailable() { return this.reader != null; }
+    public boolean isAvailable() { return this.reader == null; }
 
     @Override
     public boolean equals(Object o) {
