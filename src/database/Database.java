@@ -36,7 +36,7 @@ public class Database {
         }
     }
 
-    public void readLibraries() {
+    public synchronized void readLibraries() {
         libraries.clear();
         synchronized (LIBRARYLOCK) {
             try (ObjectInputStream o = new ObjectInputStream(new FileInputStream(new File(LIBRARYFILE)))) {
@@ -62,7 +62,7 @@ public class Database {
         }
     }
 
-    public boolean addLibrary(Library library) {
+    public synchronized boolean addLibrary(Library library) {
         synchronized (LIBRARYLOCK) {
             boolean exists = false;
 
@@ -82,7 +82,7 @@ public class Database {
         }
     }
 
-    public boolean modifyLibrary(Library library) {
+    public synchronized boolean modifyLibrary(Library library) {
         synchronized (LIBRARYLOCK) {
             for (int i = 0; i < libraries.size(); i++) {
                 if (libraries.get(i).equals(library)) {
@@ -95,7 +95,7 @@ public class Database {
         }
     }
 
-    public boolean removeLibrary(Library library) {
+    public synchronized boolean removeLibrary(Library library) {
         synchronized (LIBRARYLOCK) {
             for (int i = 0; i < libraries.size(); i++) {
                 if (libraries.get(i).equals(library)) {
@@ -108,7 +108,7 @@ public class Database {
         }
     }
 
-    public void writeLibraries() {
+    public synchronized void writeLibraries() {
         synchronized (LIBRARYLOCK) {
             try (ObjectOutputStream o = new ObjectOutputStream(new FileOutputStream(new File(LIBRARYFILE)))) {
 
@@ -124,13 +124,13 @@ public class Database {
         }
     }
 
-    public ArrayList<Library> getLibraries() {
+    public synchronized ArrayList<Library> getLibraries() {
         synchronized (LIBRARYLOCK) {
             return libraries;
         }
     }
 
-    public Library retrieveLibrary(UUID libraryID) {
+    public synchronized Library retrieveLibrary(UUID libraryID) {
         synchronized (LIBRARYLOCK) {
             for (Library library : libraries) {
                 if (library.getLibraryId().equals(libraryID)) {
@@ -141,7 +141,7 @@ public class Database {
         }
     }
 
-    public Library retrieveLibrary(String libraryName) {
+    public synchronized Library retrieveLibrary(String libraryName) {
         synchronized (LIBRARYLOCK) {
             for (Library library : libraries) {
                 if (library.getName().equals(libraryName)) {
@@ -152,7 +152,7 @@ public class Database {
         }
     }
 
-    public void readBooks() {
+    public synchronized void readBooks() {
         books.clear();
         synchronized (BOOKLOCK) {
             try (ObjectInputStream o = new ObjectInputStream(new FileInputStream(new File(BOOKFILE)))) {
@@ -178,7 +178,7 @@ public class Database {
         }
     }
 
-    public boolean addBook(Book book) {
+    public synchronized boolean addBook(Book book) {
         synchronized (BOOKLOCK) {
             boolean exists = false;
 
@@ -198,7 +198,7 @@ public class Database {
         }
     }
 
-    public boolean modifyBook(Book book) {
+    public synchronized boolean modifyBook(Book book) {
         synchronized (BOOKLOCK) {
             for (int i = 0; i < books.size(); i++) {
                 if (books.get(i).equals(book)) {
@@ -211,7 +211,7 @@ public class Database {
         }
     }
 
-    public boolean removeBook(Book book) {
+    public synchronized boolean removeBook(Book book) {
         synchronized (BOOKLOCK) {
             for (int i = 0; i < books.size(); i++) {
                 if (books.get(i).equals(book)) {
@@ -224,7 +224,7 @@ public class Database {
         }
     }
 
-    public void writeBooks() {
+    public synchronized void writeBooks() {
         synchronized (BOOKLOCK) {
             try (ObjectOutputStream o = new ObjectOutputStream(new FileOutputStream(new File(BOOKFILE)))) {
 
@@ -240,13 +240,13 @@ public class Database {
         }
     }
 
-    public ArrayList<Book> getBooks() {
+    public synchronized ArrayList<Book> getBooks() {
         synchronized (BOOKLOCK) {
             return books;
         }
     }
 
-    public Book retrieveBook(UUID bookID) {
+    public synchronized Book retrieveBook(UUID bookID) {
         synchronized (BOOKLOCK) {
             for (Book book : books) {
                 if (book.getBookID().equals(bookID)) {
@@ -258,7 +258,7 @@ public class Database {
         }
     }
 
-    public Book retrieveBook(String title) {
+    public synchronized Book retrieveBook(String title) {
         synchronized (BOOKLOCK) {
             for (Book book : books) {
                 if (book.getTitle().equals(title)) {
@@ -270,7 +270,7 @@ public class Database {
         }
     }
 
-    public ArrayList<Book> getBooksInLibrary(Library library) {
+    public synchronized ArrayList<Book> getBooksInLibrary(Library library) {
         synchronized (BOOKLOCK) {
             ArrayList<Book> libraryBooks = new ArrayList<>();
             for (Book book : books) {
@@ -283,7 +283,7 @@ public class Database {
         }
     }
 
-    public ArrayList<Book> getBooksOfReader(Reader reader) {
+    public synchronized ArrayList<Book> getBooksOfReader(Reader reader) {
         synchronized (BOOKLOCK) {
             ArrayList<Book> readerBooks = new ArrayList<>();
             for (Book book : books) {
@@ -296,7 +296,7 @@ public class Database {
         }
     }
 
-    public void readReaders() {
+    public synchronized void readReaders() {
         readers.clear();
         synchronized (READERLOCK) {
             try (ObjectInputStream o = new ObjectInputStream(new FileInputStream(new File(READERFILE)))) {
@@ -322,7 +322,7 @@ public class Database {
         }
     }
 
-    public boolean addReader(Reader reader) {
+    public synchronized boolean addReader(Reader reader) {
         synchronized (READERLOCK) {
             boolean exists = false;
 
@@ -342,7 +342,7 @@ public class Database {
         }
     }
 
-    public boolean modifyReader(Reader reader) {
+    public synchronized boolean modifyReader(Reader reader) {
         synchronized (READERLOCK) {
             for (int i = 0; i < readers.size(); i++) {
                 if (readers.get(i).equals(reader)) {
@@ -355,7 +355,7 @@ public class Database {
         }
     }
 
-    public boolean removeReader(Reader reader) {
+    public synchronized boolean removeReader(Reader reader) {
         synchronized (READERLOCK) {
             for (int i = 0; i < readers.size(); i++) {
                 if (readers.get(i).equals(reader)) {
@@ -368,7 +368,7 @@ public class Database {
         }
     }
 
-    public void writeReader() {
+    public synchronized void writeReader() {
         synchronized (READERLOCK) {
             try (ObjectOutputStream o = new ObjectOutputStream(new FileOutputStream(new File(READERFILE)))) {
 
@@ -384,13 +384,13 @@ public class Database {
         }
     }
 
-    public ArrayList<Reader> getReaders() {
+    public synchronized ArrayList<Reader> getReaders() {
         synchronized (READERLOCK) {
             return readers;
         }
     }
 
-    public Reader retrieveReader(UUID readerID) {
+    public synchronized Reader retrieveReader(UUID readerID) {
         synchronized (READERLOCK) {
             for (Reader reader : readers) {
                 if (reader.getReaderId().equals(readerID)) {
@@ -401,7 +401,7 @@ public class Database {
         }
     }
 
-    public Reader retrieveReader(String username) {
+    public synchronized Reader retrieveReader(String username) {
         synchronized (READERLOCK) {
             for (Reader reader : readers) {
                 if (reader.getUsername().equals(username)) {
@@ -412,7 +412,7 @@ public class Database {
         }
     }
 
-    public ArrayList<Reader> getReadersInLibrary(Library library) {
+    public synchronized ArrayList<Reader> getReadersInLibrary(Library library) {
         synchronized (READERLOCK) {
             ArrayList<Reader> libraryReaders = new ArrayList<>();
 

@@ -162,7 +162,8 @@ public class ClientHandler implements Runnable {
             ArrayList<Library> libraries = database.getLibraries();
             Clock systemClock = Clock.systemDefaultZone();
             System.out.println(systemClock.instant());
-            System.out.println(libraries);
+            System.out.println("Sending updated libraries to client: " + libraries);
+            out.reset();
             out.writeObject(libraries);
             out.flush();
         } catch (Exception e) {

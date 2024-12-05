@@ -141,11 +141,10 @@ public class Client {
         try {
             out.writeObject("RETRIEVE_LIBRARIES");
             out.flush();
-            //
             ArrayList<Library> libraries = (ArrayList<Library>) in.readObject();
             Clock systemClock = Clock.systemDefaultZone();
             System.out.println(systemClock.instant());
-            System.out.println(libraries);
+            System.out.println("Received libraries: " + libraries);
             return libraries;
         } catch (Exception e) {
             e.printStackTrace();
