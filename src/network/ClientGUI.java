@@ -41,12 +41,12 @@ public class ClientGUI extends JFrame implements Runnable {
 
         landingPanel = createLandingPanel();
 
-        readerTabsPanel = createReaderTabsPanel();
+        //readerTabsPanel = createReaderTabsPanel();
         //libraryTabsPanel = createLibraryTabsPanel();
 
         mainPanel.add(landingPanel, "Landing Page");
-        mainPanel.add(readerTabsPanel, "Reader Tabs");
-        mainPanel.add(libraryTabsPanel, "Library Tabs");
+        //mainPanel.add(readerTabsPanel, "Reader Tabs");
+        //mainPanel.add(libraryTabsPanel, "Library Tabs");
 
         add(mainPanel);
     }
@@ -265,7 +265,7 @@ public class ClientGUI extends JFrame implements Runnable {
         ArrayList<Book> libraryBooks = client.retrieveBooksByLibrary();
         libraryListModel = new DefaultListModel<>();
 
-        if (libraryBooks != null) {
+        if (libraryBooks != null && !libraryBooks.isEmpty()) {
             libraryBooks.forEach(book -> libraryListModel.addElement(book.toString()));
         } else {
             libraryListModel.addElement("The library has no books");
@@ -274,7 +274,7 @@ public class ClientGUI extends JFrame implements Runnable {
         searchLibraryBooksField = new JTextField();
         searchLibraryBooksField.setFont(new Font("Arial", Font.PLAIN, 14));
         searchLibraryBooksField.addCaretListener(e -> {
-            assert libraryBooks != null;
+            assert libraryBooks != null && !libraryBooks.isEmpty();
             filterList(searchLibraryBooksField.getText(), libraryListModel, libraryBooks);
         });
 
@@ -282,10 +282,11 @@ public class ClientGUI extends JFrame implements Runnable {
         libraryBookList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         libraryBookList.addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {  // Only trigger when selection is final
+            if (!e.getValueIsAdjusting()) {
                 int index = libraryBookList.getSelectedIndex();
                 if (index != -1) {
-                    handleBookSelection(index, libraryBooks);  // Trigger action when a book is clicked
+                    assert libraryBooks != null && libraryBooks.size() > index;
+                    handleBookSelection(index, libraryBooks, true);
                 }
             }
         });
@@ -306,7 +307,7 @@ public class ClientGUI extends JFrame implements Runnable {
         ArrayList<Book> userBooks = client.retrieveBooksByReader();
         userListModel = new DefaultListModel<>();
 
-        if (userBooks != null) {
+        if (userBooks != null && !userBooks.isEmpty()) {
             userBooks.forEach(book -> libraryListModel.addElement(book.toString()));
         } else {
             userListModel.addElement("You have no books checked out.");
@@ -315,7 +316,7 @@ public class ClientGUI extends JFrame implements Runnable {
         searchUserBooksField = new JTextField();
         searchUserBooksField.setFont(new Font("Arial", Font.PLAIN, 14));
         searchUserBooksField.addCaretListener(e -> {
-            assert userBooks != null;
+            assert userBooks != null && !userBooks.isEmpty();
             filterList(searchUserBooksField.getText(), userListModel, userBooks);
         });
 
@@ -326,7 +327,8 @@ public class ClientGUI extends JFrame implements Runnable {
             if (!e.getValueIsAdjusting()) {
                 int index = userBookList.getSelectedIndex();
                 if (index != -1) {
-                    //handleUserBookSelection(index, userBooks);
+                    assert userBooks != null && userBooks.size() > index;
+                    handleBookSelection(index, userBooks, false);
                 }
             }
         });
@@ -358,26 +360,36 @@ public class ClientGUI extends JFrame implements Runnable {
         }
     }
 
-    private void handleBookSelection(int index, ArrayList<Book> books) {
+    private void handleBookSelection(int index, ArrayList<Book> books, boolean checkOut) {
         Book book = books.get(index);
 
-        String bookDetails = "<html><strong>" + book.getTitle() + "</strong><br>"
-                + "Author: " + book.getAuthor() + "<br>"
-                + "Genre: " + book.getGenre() + "<br>"
-                + "Synopsis: " + book.getSynopsis() + "<br></html>";
+        String bookDetails = "<html><strong>" + book.getTitle() + "</strong><br>";
+        String action = "Return";
+
+        if (checkOut) {
+            bookDetails = "<html><strong>" + book.getTitle() + "</strong><br>"
+                    + "Author: " + book.getAuthor() + "<br>"
+                    + "Genre: " + book.getGenre() + "<br>"
+                    + "Synopsis: " + book.getSynopsis() + "<br></html>";
+            action = "Check Out";
+        }
 
         int response = JOptionPane.showConfirmDialog(
                 this,
-                "Do you want to check out the following book?<br>" + bookDetails,
-                "Check Out Book",
+                "Do you want to " + action + " the following book?<br>" + bookDetails,
+                action + " Book",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.QUESTION_MESSAGE
         );
 
         if (response == JOptionPane.YES_OPTION) {
-            checkoutBook(book);
+            if (checkOut) {
+                checkoutBook(book);
+            } else {
+                returnBook(book);
+            }
         } else {
-            JOptionPane.showMessageDialog(this, "You chose not to check out the book.", "Action Cancelled", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "You chose not to " + action + " the book.", "Action Cancelled", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
@@ -444,10 +456,19 @@ public class ClientGUI extends JFrame implements Runnable {
         cardLayout.show(mainPanel, "Landing Library Page");
     }
 
-    private void enableMainTabs() {
+    private void enableReaderMainTabs() {
+        readerTabsPanel = createReaderTabsPanel();
+        mainPanel.add(readerTabsPanel, "Reader Tabs");
         readerMainTabs.setEnabled(true);
-        cardLayout.show(mainPanel, "Tabs");
+        cardLayout.show(mainPanel, "Reader Tabs");
     }
+
+//    private void enableLibraryMainTabs() {
+//        libraryTabsPanel = createReaderTabsPanel();
+//        mainPanel.add(readerTabsPanel, "Reader Tabs");
+//        readerMainTabs.setEnabled(true);
+//        cardLayout.show(mainPanel, "Reader Tabs");
+//    }
 
     private void handleLogin(Boolean isReader) {
         String username;
@@ -476,11 +497,11 @@ public class ClientGUI extends JFrame implements Runnable {
         }
 
         if (isReader && client.loginReader(username, password)) {
-            appendOutput("Reader login successful");
-            enableMainTabs();
+            JOptionPane.showMessageDialog(this, "Reader Login Successful", "Login", JOptionPane.INFORMATION_MESSAGE);
+            enableReaderMainTabs();
         } else if (client.loginLibrary(username, password)) {
-            appendOutput("Library login successful");
-            enableMainTabs();
+            JOptionPane.showMessageDialog(this, "Library Login Successful", "Login", JOptionPane.INFORMATION_MESSAGE);
+            //enableMainTabs();
         } else {
             showError("Either Library Name/Username or Password is Incorrect");
         }
@@ -588,14 +609,11 @@ public class ClientGUI extends JFrame implements Runnable {
         }
     }
 
-    private void returnBook() {
-        String title = bookTitleField.getText();
-        Book book = new Book(title, null, null, null, null);
-
+    private void returnBook(Book book) {
         if (client.returnBook(book)) {
-            appendOutput("Book returned: " + title);
+            JOptionPane.showMessageDialog(this, "Book returned successfully!", "Book Return", JOptionPane.INFORMATION_MESSAGE);
         } else {
-            appendOutput("Failed to return book");
+            JOptionPane.showMessageDialog(this, "Book return failed!", "Book Return", JOptionPane.ERROR_MESSAGE);
         }
     }
 
