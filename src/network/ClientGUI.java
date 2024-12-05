@@ -415,9 +415,13 @@ public class ClientGUI extends JFrame implements Runnable {
             JOptionPane.showMessageDialog(this, "Library Account Created Successfully!", "Account Creation", JOptionPane.INFORMATION_MESSAGE);
 
             updateLibraryDropdowns();
+            client.endStream();
 
         } else if (isReader && client.createReader(username, password, library)) {
+
             JOptionPane.showMessageDialog(this, "Reader Account Created Successfully!", "Account Creation", JOptionPane.INFORMATION_MESSAGE);
+            client.endStream();
+
         } else {
             showError("Account Creation Failed");
         }
@@ -426,9 +430,6 @@ public class ClientGUI extends JFrame implements Runnable {
     private void updateLibraryDropdowns() {
         System.out.println("looking to update libraries");
         ArrayList<Library> libraries = this.retrieveLibraries();
-        //Clock systemClock = Clock.systemDefaultZone();
-        //System.out.println(systemClock.instant());
-        //System.out.println(libraries);
 
         loginLibraryDropdown.removeAllItems();
         loginLibraryDropdown.addItem(null);

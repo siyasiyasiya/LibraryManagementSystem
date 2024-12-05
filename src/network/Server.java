@@ -4,17 +4,6 @@ import java.io.*;
 import java.net.*;
 import database.*;
 
-/**
- * Server class that establishes a connection with the client, forwarding the newly created socket to a ClientHandler,
- * which will handle the client's requests. The server creates a new thread for each client connection, ensuring
- * that users can connect simultaneously.
- *
- * <p>Purdue University -- CS18000 -- Fall 2024 -- Team Project</p>
- *
- * @author Siya Jariwala, Henry Hengyi Tsay, Nakshatra Tondepu, Saksham Kaushik
- * @version Nov 17, 2024
- */
-
 public class Server implements Runnable {
     private ServerSocket serverSocket;
     private boolean running;
