@@ -258,10 +258,10 @@ public class Database {
         }
     }
 
-    public synchronized Book retrieveBook(String title) {
+    public synchronized Book retrieveBook(String title, String author, Library library) {
         synchronized (BOOKLOCK) {
             for (Book book : books) {
-                if (book.getTitle().equals(title)) {
+                if (book.getTitle().equals(title) && book.getAuthor().equals(author) && book.getLibrary().equals(library.getLibraryId())) {
                     return book;
                 }
             }
