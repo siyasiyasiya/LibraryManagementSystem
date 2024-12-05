@@ -260,7 +260,7 @@ public class ClientGUI extends JFrame implements Runnable {
 
     private JPanel createLibraryBooksPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         ArrayList<Book> libraryBooks = client.retrieveBooksByLibrary();
         libraryListModel = new DefaultListModel<>();
@@ -272,7 +272,14 @@ public class ClientGUI extends JFrame implements Runnable {
         }
 
         searchLibraryBooksField = new JTextField();
+
         searchLibraryBooksField.setFont(new Font("Arial", Font.PLAIN, 14));
+        searchLibraryBooksField.setPreferredSize(new Dimension(200, 30));
+        searchLibraryBooksField.setForeground(Color.BLACK);
+        searchLibraryBooksField.setBackground(new Color(245, 245, 245));  // Light gray background
+        searchLibraryBooksField.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+        searchLibraryBooksField.setMargin(new Insets(5, 20, 5, 20));
+
         searchLibraryBooksField.addCaretListener(e -> {
             if (libraryBooks != null && !libraryBooks.isEmpty() && !searchLibraryBooksField.getText().isEmpty()) {
                 filterList(searchLibraryBooksField.getText(), libraryListModel, libraryBooks);
@@ -281,6 +288,12 @@ public class ClientGUI extends JFrame implements Runnable {
 
         libraryBookList = new JList<>(libraryListModel);
         libraryBookList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        libraryBookList.setFont(new Font("Arial", Font.PLAIN, 14));  // Make font consistent
+        libraryBookList.setBackground(Color.WHITE);  // Set background to white
+        libraryBookList.setForeground(Color.DARK_GRAY);  // Darker text for better readability
+        libraryBookList.setSelectionBackground(new Color(30, 144, 255));  // Bright blue selection color
+        libraryBookList.setSelectionForeground(Color.WHITE);
 
         libraryBookList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
@@ -302,7 +315,7 @@ public class ClientGUI extends JFrame implements Runnable {
 
     private JPanel createUserBooksPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         ArrayList<Book> userBooks = client.retrieveBooksByReader();
         userListModel = new DefaultListModel<>();
@@ -314,7 +327,14 @@ public class ClientGUI extends JFrame implements Runnable {
         }
 
         searchUserBooksField = new JTextField();
+
         searchUserBooksField.setFont(new Font("Arial", Font.PLAIN, 14));
+        searchUserBooksField.setPreferredSize(new Dimension(200, 30));
+        searchUserBooksField.setForeground(Color.BLACK);
+        searchUserBooksField.setBackground(new Color(245, 245, 245));  // Light gray background
+        searchUserBooksField.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+        searchUserBooksField.setMargin(new Insets(5, 10, 5, 10));
+
         searchUserBooksField.addCaretListener(e -> {
             if (userBooks != null && !userBooks.isEmpty() && !searchUserBooksField.getText().isEmpty()) {
                 filterList(searchUserBooksField.getText(), userListModel, userBooks);
@@ -323,6 +343,12 @@ public class ClientGUI extends JFrame implements Runnable {
 
         userBookList = new JList<>(userListModel);
         userBookList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        userBookList.setFont(new Font("Arial", Font.PLAIN, 14));  // Make font consistent
+        userBookList.setBackground(Color.WHITE);  // White background for list
+        userBookList.setForeground(Color.DARK_GRAY);  // Dark gray text
+        userBookList.setSelectionBackground(new Color(30, 144, 255));  // Blue selection color
+        userBookList.setSelectionForeground(Color.WHITE);
 
         userBookList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
@@ -374,22 +400,26 @@ public class ClientGUI extends JFrame implements Runnable {
             action = "Check Out";
         }
 
-        int response = JOptionPane.showConfirmDialog(
-                this,
-                "Do you want to " + action + " the following book?<br>" + bookDetails,
-                action + " Book",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE
-        );
-
-        if (response == JOptionPane.YES_OPTION) {
-            if (checkOut) {
-                checkoutBook(book);
-            } else {
-                returnBook(book);
-            }
+        if (!book.isAvailable() && checkOut) {
+            JOptionPane.showMessageDialog(this, "Book is currently checked out by another user.", "Book Unavailable", JOptionPane.INFORMATION_MESSAGE);
         } else {
-            JOptionPane.showMessageDialog(this, "You chose not to " + action + " the book.", "Action Cancelled", JOptionPane.INFORMATION_MESSAGE);
+            int response = JOptionPane.showConfirmDialog(
+                    this,
+                    "Do you want to " + action + " the following book?<br>" + bookDetails,
+                    action + " Book",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE
+            );
+
+            if (response == JOptionPane.YES_OPTION) {
+                if (checkOut) {
+                    checkoutBook(book);
+                } else {
+                    returnBook(book);
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "You chose not to " + action + " the book.", "Action Cancelled", JOptionPane.INFORMATION_MESSAGE);
+            }
         }
     }
 
