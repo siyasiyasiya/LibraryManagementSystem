@@ -180,6 +180,7 @@ public class ClientHandler implements Runnable {
     public void retrieveReadersByLibrary() {
         try {
             ArrayList<Reader> readers = database.getReadersInLibrary(library);
+            out.reset();
             out.writeObject(readers);
             out.flush();
         } catch (Exception e) {
@@ -190,6 +191,7 @@ public class ClientHandler implements Runnable {
     public void retrieveBooksByLibrary() {
         try {
             ArrayList<Book> books = database.getBooksInLibrary(library);
+            out.reset();
             out.writeObject(books);
             out.flush();
         } catch (Exception e) {
@@ -207,6 +209,8 @@ public class ClientHandler implements Runnable {
             }
 
             ArrayList<Book> books = database.getBooksOfReader(tempReader);
+            System.out.println("Sending updated books to client: " + books);
+            out.reset();
             out.writeObject(books);
             out.flush();
         } catch (Exception e) {
@@ -218,6 +222,8 @@ public class ClientHandler implements Runnable {
         try {
             Book book = (Book) in.readObject();
             Reader reader = database.retrieveReader(book.getReader());
+            System.out.println(book.getReader());
+            out.reset();
             out.writeObject(reader);
             out.flush();
         } catch (Exception e) {
@@ -230,8 +236,11 @@ public class ClientHandler implements Runnable {
             Book book = (Book) in.readObject();
 
             if (book.isAvailable() && library.getBooks().contains(book.getBookID())) {
+                System.out.println(book);
                 reader.addBook(book.getBookID());
                 book.setReader(reader.getReaderId());
+                System.out.println(book.getReader());
+                database.modifyBook(book);
                 database.writeBooks();
                 database.writeReader();
                 out.writeObject("SUCCESS");
@@ -249,11 +258,13 @@ public class ClientHandler implements Runnable {
         try {
             Book book = (Book) in.readObject();
 
-            if (book.getReader().equals(reader.getReaderId())) {
+            if (reader.getBooks().contains(book.getBookID())) {
                 reader.removeBook(book.getBookID());
                 book.setReader(null);
+                database.modifyBook(book);
                 database.writeBooks();
                 database.writeReader();
+                out.reset();
                 out.writeObject("SUCCESS");
             } else {
                 out.writeObject("FAILURE");

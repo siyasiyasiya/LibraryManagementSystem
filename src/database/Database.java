@@ -287,7 +287,7 @@ public class Database {
         synchronized (BOOKLOCK) {
             ArrayList<Book> readerBooks = new ArrayList<>();
             for (Book book : books) {
-                if (book.getReader() != null && book.getReader().equals(reader.getReaderId())) {
+                if (reader.getBooks().contains(book.getBookID())) {
                     readerBooks.add(book);
                 }
             }

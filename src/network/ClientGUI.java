@@ -15,9 +15,9 @@ import java.util.ArrayList;
 public class ClientGUI extends JFrame implements Runnable {
 
     private Client client;
-    private JTextField loginUsernameField, createUsernameField, libraryNameField, bookTitleField, bookAuthorField, bookGenreField, bookSynopsisField, searchLibraryBooksField, searchUserBooksField;
+    private JTextField loginUsernameField, createUsernameField, libraryNameField, bookTitleField, bookAuthorField, bookGenreField, ynopsisArea, searchLibraryBooksField, searchUserBooksField;
     private JPasswordField loginPasswordField, createPasswordField;
-    private JTextArea outputArea;
+    private JTextArea bookSynopsisTextArea;
     private JPanel mainPanel, landingPanel, landingUserPanel, landingLibraryPanel, readerTabsPanel, libraryTabsPanel;
     private CardLayout cardLayout;
     private JTabbedPane landingUserTabs, landingLibraryTabs, readerMainTabs, libraryMainTabs;
@@ -345,7 +345,7 @@ public class ClientGUI extends JFrame implements Runnable {
         userListModel = new DefaultListModel<>();
 
         if (userBooks != null && !userBooks.isEmpty()) {
-            userBooks.forEach(book -> libraryListModel.addElement(book.toString()));
+            userBooks.forEach(book -> userListModel.addElement(book.toString()));
         } else {
             userListModel.addElement("You have no books checked out.");
         }
@@ -413,32 +413,40 @@ public class ClientGUI extends JFrame implements Runnable {
     private void handleBookSelection(int index, ArrayList<Book> books, int which) {
         Book book = books.get(index);
 
-        String bookDetails = "<html><strong>" + book.getTitle() + "</strong><br>";
+        String bookDetails = "Title: " + book.getTitle() + "\n"
+                + "Author: " + book.getAuthor() + "\n"
+                + "Genre: " + book.getGenre() + "\n"
+                + "Synopsis: " + book.getSynopsis();
         String action = "Remove";
 
         if (which == 0) {
-            bookDetails = "<html><strong>" + book.getTitle() + "</strong><br>"
-                    + "Author: " + book.getAuthor() + "<br>"
-                    + "Genre: " + book.getGenre() + "<br>"
-                    + "Synopsis: " + book.getSynopsis() + "<br></html>";
             action = "Check Out";
         } else if (which == 1) {
             action = "Return";
         }
 
-        bookDetails += "</html>";
+        JTextArea textArea = new JTextArea(bookDetails);
+        textArea.setWrapStyleWord(true);
+        textArea.setLineWrap(true);
+        textArea.setEditable(false);
+        textArea.setFont(new Font("Arial", Font.PLAIN, 14));
 
-        if (!book.isAvailable()) {
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.setPreferredSize(new Dimension(350, 200));
+
+        Reader reader = client.retrieveReaderOfBook(book);
+        System.out.println(reader);
+
+        if (reader != null) {
             if (which == 0) {
-                JOptionPane.showMessageDialog(this, "Book is currently checked out by another user.", "Book Unavailable", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Book is currently checked out by a user.", "Book Unavailable", JOptionPane.INFORMATION_MESSAGE);
             } else if (which == 2) {
-                Reader reader = client.retrieveReaderOfBook(book);
                 JOptionPane.showMessageDialog(this, "Book is currently checked out by " + reader.getUsername() + ".", "Book Unavailable", JOptionPane.INFORMATION_MESSAGE);
             }
         } else {
             int response = JOptionPane.showConfirmDialog(
                     this,
-                    "<html>Do you want to " + action.toLowerCase() + " the following book?<br>" + bookDetails,
+                    scrollPane,
                     action + " Book",
                     JOptionPane.YES_NO_OPTION,
                     JOptionPane.QUESTION_MESSAGE
@@ -455,12 +463,12 @@ public class ClientGUI extends JFrame implements Runnable {
             } else {
                 JOptionPane.showMessageDialog(this, "You chose not to " + action.toLowerCase() + " the book.", "Action Cancelled", JOptionPane.INFORMATION_MESSAGE);
             }
+        }
 
-            if (which == 1) {
-                userBookList.clearSelection();
-            } else {
-                libraryBookList.clearSelection();
-            }
+        if (which == 1) {
+            userBookList.clearSelection();
+        } else {
+            libraryBookList.clearSelection();
         }
     }
 
@@ -487,8 +495,11 @@ public class ClientGUI extends JFrame implements Runnable {
 
         JLabel synopsisLabel = new JLabel("Synopsis:");
         synopsisLabel.setFont(new Font("Arial", Font.BOLD, 14));
-        bookSynopsisField = new JTextField();
-        bookSynopsisField.setFont(new Font("Arial", Font.PLAIN, 14));
+        bookSynopsisTextArea= new JTextArea(5, 20);
+        bookSynopsisTextArea.setWrapStyleWord(true);
+        bookSynopsisTextArea.setLineWrap(true);
+        bookSynopsisTextArea.setFont(new Font("Arial", Font.PLAIN, 14));
+        JScrollPane scrollPane = new JScrollPane(bookSynopsisTextArea);
 
         JPanel buttonPanel = new JPanel(new BorderLayout());
         JButton addBookButton = new JButton("Add Book to Library");
@@ -504,23 +515,10 @@ public class ClientGUI extends JFrame implements Runnable {
         fieldPanel.add(genreLabel);
         fieldPanel.add(bookGenreField);
         fieldPanel.add(synopsisLabel);
-        fieldPanel.add(bookSynopsisField);
+        fieldPanel.add(scrollPane);
 
         panel.add(fieldPanel, BorderLayout.CENTER);
         panel.add(buttonPanel, BorderLayout.SOUTH);
-
-        return panel;
-    }
-
-    private JPanel createOutputPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createTitledBorder("Output"));
-
-        outputArea = new JTextArea();
-        outputArea.setEditable(false);
-
-        JScrollPane scrollPane = new JScrollPane(outputArea);
-        panel.add(scrollPane, BorderLayout.CENTER);
 
         return panel;
     }
@@ -675,7 +673,7 @@ public class ClientGUI extends JFrame implements Runnable {
         userListModel.clear();
 
         if (userBooks != null && !userBooks.isEmpty()) {
-            userBooks.forEach(book -> libraryListModel.addElement(book.toString()));
+            userBooks.forEach(book -> userListModel.addElement(book.toString()));
         } else {
             userListModel.addElement("You have no books checked out.");
         }
@@ -692,7 +690,7 @@ public class ClientGUI extends JFrame implements Runnable {
         String title = bookTitleField.getText();
         String author = bookAuthorField.getText();
         String genre = bookGenreField.getText();
-        String synopsis = bookSynopsisField.getText();
+        String synopsis = bookSynopsisTextArea.getText();
 
         if (client.addBookToLibrary(title, author, genre, synopsis)) {
             JOptionPane.showMessageDialog(this, "Book added to library successfully!", "Book Add", JOptionPane.INFORMATION_MESSAGE);
@@ -705,9 +703,7 @@ public class ClientGUI extends JFrame implements Runnable {
     private void removeBookFromLibrary(Book book) {
         if (client.removeBookFromLibrary(book)) {
             JOptionPane.showMessageDialog(this, "Book removed from library successfully!", "Book Remove", JOptionPane.INFORMATION_MESSAGE);
-            libraryListModel.removeElement(book.toString());
-            libraryBookList.revalidate();
-            libraryBookList.repaint();
+            updateLibraryBookList();
         } else {
             JOptionPane.showMessageDialog(this, "Book removal failed!", "Book Remove", JOptionPane.ERROR_MESSAGE);
         }
@@ -725,9 +721,7 @@ public class ClientGUI extends JFrame implements Runnable {
     private void returnBook(Book book) {
         if (client.returnBook(book)) {
             JOptionPane.showMessageDialog(this, "Book returned successfully!", "Book Return", JOptionPane.INFORMATION_MESSAGE);
-            userListModel.removeElement(book.toString());
-            userBookList.revalidate();
-            userBookList.repaint();
+            updateUserBookList();
         } else {
             JOptionPane.showMessageDialog(this, "Book return failed!", "Book Return", JOptionPane.ERROR_MESSAGE);
         }
